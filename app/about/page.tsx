@@ -182,7 +182,7 @@ export default function About() {
                 <p style={{ color: "#E8E3DC", fontSize: "0.9rem", marginBottom: "0.75rem", lineHeight: 1.6 }}>
                   Got a wash process issue? Book a free 15-minute call — I&apos;ll give you a direct, honest assessment.
                 </p>
-                <a href="mailto:joyanta@email.com?subject=Free%2015-min%20Consultation%20Request" style={{ display: "inline-block", background: "#C4622D", color: "white", padding: "0.65rem 1.5rem", fontSize: "0.8rem", letterSpacing: "0.04em", textDecoration: "none" }}>
+                <a href="mailto:joyanta.sarkar.texengg@gmail.com?subject=Free%2015-min%20Consultation%20Request" style={{ display: "inline-block", background: "#C4622D", color: "white", padding: "0.65rem 1.5rem", fontSize: "0.8rem", letterSpacing: "0.04em", textDecoration: "none" }}>
                   Book a Call →
                 </a>
               </div>
