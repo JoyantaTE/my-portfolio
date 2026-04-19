@@ -81,9 +81,9 @@ export default function Home() {
     { icon: "💧", value: "10%", label: "Water Reduced", sub: "Pacific Jeans", pct: 70 },
     { icon: "🧪", value: "5 yrs", label: "Industry Experience", sub: "Wet Processing", pct: 100 },
     { icon: "👕", value: "10+", label: "Global Brands Served", sub: "Uniqlo, Zara & more", pct: 100 },
-    { icon: "⚗️", value: "3", label: "Bleaching Agents", sub: "Research Paper", pct: 60 },
-    { icon: "♻️", value: "R&D", label: "Sustainability Focus", sub: "ETP & Eco Auxiliaries", pct: 70 },
-    { icon: "🔬", value: "Wash Tech", label: "Optimised Process", sub: "Enzyme, Stone, Bleach", pct: 90 },
+    { icon: "⚗️", value: "3", label: "Effectiveness of Bleaching Agents", sub: "Research Paper", pct: 60 },
+    { icon: "♻️", value: "R&D", label: "Sustainability Focus", sub: "ETP Based and Eco Auxiliaries", pct: 70 },
+    { icon: "🔬", value: "Wash Tech", label: "Optimised Process", sub: "Enzyme, Stone, Bleach, Garment-Dyeing", pct: 90 },
   ];
 
   const clients = [
@@ -95,7 +95,14 @@ export default function Home() {
     <>
       {/* Hero */}
       <section style={{ position:"relative", minHeight:"90vh", display:"flex", alignItems:"center", overflow:"hidden" }}>
-        <WashedDenimCanvas />
+        <div style={{
+  position: "absolute",
+  inset: 0,
+  backgroundImage: "url('/denim-bg.jpg')",
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  filter: "brightness(0.45)",
+}} />
         <div style={{ position:"relative", zIndex:1, maxWidth:1100, margin:"0 auto", padding:"5rem 2rem" }}>
           <p style={{ fontSize:"0.8125rem", letterSpacing:"0.12em", textTransform:"uppercase", color:"#C4622D", marginBottom:"1.5rem", fontWeight:500 }}>
             Textile Chemical Engineer
@@ -132,9 +139,9 @@ export default function Home() {
       </section>
 
 {/* Client Logos */}
-      <section style={{ background:"#ffeed4", padding:"3rem 2rem", borderTop:"1px solid rgba(196,98,45,0.1)" }}>
+      <section style={{ background:"#1A1A1A", padding:"3rem 2rem", borderTop:"1px solid rgba(196,98,45,0.15)" }}>
         <div style={{ maxWidth:1100, margin:"0 auto" }}>
-          <p style={{ fontSize:"0.75rem", letterSpacing:"0.1em", textTransform:"uppercase", color:"#999", marginBottom:"2rem", textAlign:"center" }}>
+          <p style={{ fontSize:"0.75rem", letterSpacing:"0.1em", textTransform:"uppercase", color:"#ffffff", marginBottom:"2rem", textAlign:"center" }}>
             Brands I&apos;ve Served
           </p>
           <div style={{ display:"flex", gap:"1.5rem", flexWrap:"wrap", alignItems:"center", justifyContent:"center" }}>
@@ -165,7 +172,7 @@ export default function Home() {
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))", gap:"2rem" }}>
             {[
               { title:"Wash Technology", desc:"Enzyme, stone, bleach & acid wash — parameters, chemistry and troubleshooting." },
-              { title:"Dyeing & Bio-Wash", desc:"Reactive, Direct, Pigment & Dischargable dye systems. Colour fastness optimization & Reduce Variation." },
+              { title:"Garment Dyeing & Bio-Wash", desc:"Reactive, Direct, Pigment & Dischargable dye systems. Colour fastness optimization & Reduce Variation." },
               { title:"Sustainability R&D", desc:"Effluent control, water reduction and eco-friendly auxiliary research." },
               { title:"Process Analysis", desc:"Data-driven optimization of washing and dyeing line parameters." },
             ].map((s) => (
