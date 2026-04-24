@@ -108,7 +108,7 @@ export default function Home() {
             Textile Chemical Engineer
           </p>
           <h1 style={{ fontSize:"clamp(3rem, 7vw, 5rem)", lineHeight:1.05, color:"#F0EDE8", marginBottom:"2rem", maxWidth:800, textShadow:"0 2px 30px rgba(0,0,0,0.5)" }}>
-            Hi, I&apos;m Joyanta
+            Meet an Expert in Wash Technology
           </h1>
           <p style={{ fontSize:"1.125rem", color:"rgba(240,237,232,0.7)", maxWidth:520, marginBottom:"3rem", lineHeight:1.8 }}>
             Specializing in wash technology, process optimization &amp; sustainable textile solutions at Pacific Jeans.
@@ -171,14 +171,19 @@ export default function Home() {
           </p>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))", gap:"2rem" }}>
             {[
-              { title:"Wash Technology", desc:"Enzyme, stone, bleach & acid wash — parameters, chemistry and troubleshooting." },
+              { title:"Wash Technology", desc:"Enzyme, stone, bleach & normal wash — parameters, chemistry and troubleshooting.", link:"/wash" },
               { title:"Garment Dyeing & Bio-Wash", desc:"Reactive, Direct, Pigment & Dischargable dye systems. Colour fastness optimization & Reduce Variation." },
               { title:"Sustainability R&D", desc:"Effluent control, water reduction and eco-friendly auxiliary research." },
               { title:"Process Analysis", desc:"Data-driven optimization of washing and dyeing line parameters." },
-            ].map((s) => (
-              <div key={s.title} style={{ borderTop:"2px solid #C4622D", paddingTop:"1.25rem" }}>
+            ].map((s: { title: string; desc: string; link?: string }) => (
+              <div
+                key={s.title}
+                onClick={() => s.link && (window.location.href = s.link)}
+                style={{ borderTop:"2px solid #C4622D", paddingTop:"1.25rem", cursor: s.link ? "pointer" : "default" }}
+              >
                 <h3 style={{ fontSize:"1rem", marginBottom:"0.5rem", color:"#E8E3DC" }}>{s.title}</h3>
                 <p style={{ fontSize:"0.875rem", color:"#A0A0A0", lineHeight:1.6 }}>{s.desc}</p>
+                {s.link && <p style={{ marginTop:"0.5rem", fontSize:"0.75rem", color:"#C4622D", letterSpacing:"0.04em" }}>Learn more →</p>}
               </div>
             ))}
           </div>
