@@ -172,9 +172,9 @@ export default function Home() {
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))", gap:"2rem" }}>
             {[
               { title:"Wash Technology", desc:"Enzyme, stone, bleach & normal wash — parameters, chemistry and troubleshooting.", link:"/wash" },
-              { title:"Garment Dyeing & Bio-Wash", desc:"Reactive, Direct, Pigment & Dischargable dye systems. Colour fastness optimization & Reduce Variation." },
-              { title:"Sustainability R&D", desc:"Effluent control, water reduction and eco-friendly auxiliary research." },
-              { title:"Process Analysis", desc:"Data-driven optimization of washing and dyeing line parameters." },
+              { title:"Garment Dyeing & Bio-Wash", desc:"Reactive, Direct, Pigment & Dischargable dye systems. Colour fastness optimization & Reduce Variation.", link:"/dyeing" },
+              { title:"Sustainability R&D", desc:"Effluent control, water reduction and eco-friendly auxiliary research.", link:"/sustainability" },
+              { title:"Process Analysis", desc:"Data-driven optimization of washing and dyeing line parameters.", link:"/process-analysis" }
             ].map((s: { title: string; desc: string; link?: string }) => (
               <div
                 key={s.title}
