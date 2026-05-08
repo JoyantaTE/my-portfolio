@@ -1,242 +1,174 @@
 "use client";
-import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-function WashCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    let animId: number, t = 0, last = 0;
-    const bubbles = Array.from({ length: 50 }, () => ({
-      x: Math.random() * 1400, y: Math.random() * 800,
-      vy: -(0.3 + Math.random() * 0.8), r: 2 + Math.random() * 8,
-      phase: Math.random() * Math.PI * 2,
-      vx: (Math.random() - 0.5) * 0.3,
-    }));
-    function resize() { if (!canvas) return; canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
-    function draw(time: number) {
-      if (!canvas || !ctx) return;
-      const W = canvas.width, H = canvas.height;
-      ctx.fillStyle = "#0a1628"; ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = "rgba(255,255,255,0.02)"; ctx.lineWidth = 0.5;
-      for (let x = 0; x < W; x += 50) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
-      for (let y = 0; y < H; y += 50) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
-      bubbles.forEach(b => {
-        b.y += b.vy; b.x += b.vx + 0.5 * Math.sin(time * 0.4 + b.phase);
-        if (b.y < -20) { b.y = H + 20; b.x = Math.random() * W; }
-        if (b.x < 0) b.x = W; if (b.x > W) b.x = 0;
-        const alpha = 0.1 + 0.1 * Math.sin(time + b.phase);
-        ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(196,98,45,${alpha})`; ctx.lineWidth = 0.8; ctx.stroke();
-        // Bubble shine
-        ctx.beginPath(); ctx.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.25, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${alpha * 0.5})`; ctx.fill();
-      });
-      // Water ripples
-      for (let i = 0; i < 3; i++) {
-        const rx = W * (0.2 + i * 0.3) + 30 * Math.sin(time * 0.2 + i);
-        const ry = H * 0.6 + 20 * Math.cos(time * 0.15 + i);
-        const rr = 80 + 40 * Math.sin(time * 0.3 + i);
-        ctx.beginPath(); ctx.ellipse(rx, ry, rr, rr * 0.3, 0, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(196,98,45,0.05)`; ctx.lineWidth = 1; ctx.stroke();
-      }
-      const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.1, W / 2, H / 2, H * 0.9);
-      vig.addColorStop(0, "rgba(0,0,0,0)"); vig.addColorStop(1, "rgba(0,0,0,0.75)");
-      ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
-    }
-    function loop(ts: number) { const dt = ts - last; last = ts; t += dt * 0.01; draw(t); animId = requestAnimationFrame(loop); }
-    resize(); window.addEventListener("resize", resize); animId = requestAnimationFrame(loop);
-    return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize); };
-  }, []);
-  return <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} />;
-}
-const washTypes = [
-  {
-    id: "enzyme",
-    title: "Enzyme Wash",
-    icon: "🧬",
-    tag: "Most Popular",
-    tagColor: "#3d8a5a",
-    desc: "Uses biological enzymes (cellulase, laccase etc.) to modify fabric surface. Produces bio-stoning, bio-polishing and color fading effects without harsh chemicals.",
-    effect: "Bio-stoning, surface smoothing, color fading",
-    fabric: "100% Cotton, Denim",
-    temp: "45 – 60°C",
-    time: "30 – 60 min",
-    pH: "4.5 – 7.0",
-    cost: 2,
-    link: "/enzyme",
-    highlights: ["Eco-friendly", "Soft hand feel", "Controlled fading"],
-  },
-  {
-    id: "stone",
-    title: "Stone Wash",
-    icon: "🪨",
-    tag: "Classic",
-    tagColor: "#5a5a5a",
-    desc: "Pumice stones tumbled with garments in washing machine. Physical abrasion creates vintage worn look. Heavy on machine and fabric.",
-    effect: "Heavy abrasion, vintage worn look",
-    fabric: "Denim, Heavy Cotton",
-    temp: "40 – 60°C",
-    time: "60 – 120 min",
-    pH: "6.0 – 8.0",
-    cost: 2,
-    link: null,
-    highlights: ["Authentic vintage look", "Heavy fading", "Deep abrasion marks"],
-  },
-  {
-    id: "bleach",
-    title: "Bleach Wash",
-    icon: "🌊",
-    tag: "High Impact",
-    tagColor: "#C4622D",
-    desc: "Sodium hypochlorite used to decolorize indigo dye on denim. Creates dramatic fading and high contrast. Requires careful neutralization.",
-    effect: "Dramatic decolorization, high contrast",
-    fabric: "Denim, Dark Cotton",
-    temp: "20 – 40°C",
-    time: "15 – 40 min",
-    pH: "9.0 – 11.0",
-    cost: 1,
-    link: null,
-    highlights: ["Dramatic color change", "Very low cost", "Fast process"],
-  },
-  {
-    id: "peroxide",
-    title: "Peroxide Wash",
-    icon: "⚗️",
-    tag: "Eco Choice",
-    tagColor: "#3d6b8a",
-    desc: "Hydrogen peroxide used for bleaching and color lifting. Eco-friendly alternative to chlorine bleach. Produces even, stable whiteness.",
-    effect: "Even whitening, color lifting",
-    fabric: "Cotton, Denim, Knit",
-    temp: "60 – 98°C",
-    time: "30 – 60 min",
-    pH: "10.0 – 11.5",
-    cost: 2,
-    link: null,
-    highlights: ["Stable white result", "No chlorine", "Good absorbency"],
-  },
-  {
-    id: "acid",
-    title: "Acid Wash",
-    icon: "🔬",
-    tag: "Specialty",
-    tagColor: "#7a3a1a",
-    desc: "Pumice stones soaked in potassium permanganate or sodium hypochlorite applied to dry garments. Creates irregular, cloudy fading patterns.",
-    effect: "Irregular cloud-like fading patterns",
-    fabric: "Denim",
-    temp: "Room temp",
-    time: "20 – 45 min",
-    pH: "Varies",
-    cost: 3,
-    link: null,
-    highlights: ["Unique cloud effect", "High fashion look", "Distinctive patterns"],
-  },
-  {
-    id: "sand",
-    title: "Sand Wash",
-    icon: "🏖️",
-    tag: "Soft Feel",
-    tagColor: "#7a6a2a",
-    desc: "Fine sand or sand-blasting used to abrade fabric surface. Creates very soft, peach-skin hand feel with subtle fading.",
-    effect: "Soft peach-skin surface, subtle fade",
-    fabric: "Silk, Synthetic, Cotton",
-    temp: "30 – 50°C",
-    time: "30 – 60 min",
-    pH: "6.0 – 8.0",
-    cost: 3,
-    link: null,
-    highlights: ["Ultra soft hand feel", "Subtle uniform fade", "Works on delicate fabrics"],
-  },
-  {
-    id: "normal",
-    title: "Normal Wash",
-    icon: "💧",
-    tag: "Basic",
-    tagColor: "#3d3d3d",
-    desc: "Standard garment wash with detergent and water. Removes dust, sizing agents and manufacturing odours. No special effect.",
-    effect: "Cleaning, softening, odour removal",
-    fabric: "All fabric types",
-    temp: "40 – 60°C",
-    time: "15 – 30 min",
-    pH: "7.0 – 9.0",
-    cost: 1,
-    link: null,
-    highlights: ["Simple process", "Very low cost", "No special chemicals"],
-  },
-  {
-    id: "silicon",
-    title: "Silicone Wash",
-    icon: "✨",
-    tag: "Premium",
-    tagColor: "#4a3d7a",
-    desc: "Silicone-based softeners applied during washing. Creates extremely smooth, silky hand feel. Popular for premium garment finishing.",
-    effect: "Silky smooth hand feel",
-    fabric: "Cotton, Denim, Knit",
-    temp: "30 – 50°C",
-    time: "20 – 40 min",
-    pH: "5.0 – 7.0",
-    cost: 3,
-    link: null,
-    highlights: ["Superior softness", "Luxury hand feel", "Long lasting effect"],
-  },
-  {
-    id: "vintage",
-    title: "Vintage Wash",
-    icon: "🎞️",
-    tag: "Fashion",
-    tagColor: "#5a3a1a",
-    desc: "Combination of enzyme, bleach and mechanical treatments to create aged, worn-in vintage appearance. Multi-step process.",
-    effect: "Aged worn-in vintage appearance",
-    fabric: "Denim, Heavy Cotton",
-    temp: "40 – 60°C",
-    time: "90 – 180 min",
-    pH: "Varies per step",
-    cost: 4,
-    link: null,
-    highlights: ["Authentic vintage look", "Multi-step effect", "High fashion value"],
-  },
-  {
-    id: "moon",
-    title: "Moon Wash",
-    icon: "🌙",
-    tag: "Specialty",
-    tagColor: "#2a3a5a",
-    desc: "Combination of bleach and enzyme wash creating high contrast areas with soft fading between. Creates moon-like surface patterns.",
-    effect: "High contrast moon-like patterns",
-    fabric: "Denim",
-    temp: "40 – 55°C",
-    time: "45 – 90 min",
-    pH: "Varies",
-    cost: 4,
-    link: null,
-    highlights: ["Unique surface pattern", "High contrast fading", "Premium fashion look"],
-  },
+const sections = [
+  "Overview",
+  "Enzyme Wash",
+  "Stone Wash",
+  "Bleach Wash",
+  "Peroxide Wash",
+  "Acid Wash",
+  "Sand Wash",
+  "Normal Wash",
+  "Silicone Wash",
+  "Vintage Wash",
+  "Moon Wash",
 ];
 
+const content = {
+  "Overview": {
+    icon: "💧",
+    intro: "Garment washing is a wet processing technique applied to finished garments to achieve specific aesthetic effects, softness, or cleanliness. The right wash process depends on fabric type, desired effect, and cost target.",
+    points: [
+      { title: "What is Garment Washing?", desc: "A post-production process where assembled garments are treated in washing machines with water, chemicals and/or mechanical action to achieve desired appearance and hand feel." },
+      { title: "Why Wash Garments?", desc: "To achieve fashion effects (fading, distressing), improve softness, remove manufacturing residues, and add value to the finished product." },
+      { title: "Suitable Fabrics", desc: "100% Cotton, Denim, Linen, Viscose, and blends. Each fabric responds differently — process parameters must be adjusted accordingly." },
+      { title: "Key Factors", desc: "Liquor ratio, temperature, time, pH, mechanical action, and chemical concentration all affect the final result. Changing one affects all others." },
+      { title: "Machine Types", desc: "Front-loading rotary machines, paddle machines, and tumble dryers are the most common. Machine capacity and rotation speed affect the wash effect significantly." },
+    ],
+  },
+  "Enzyme Wash": {
+    icon: "🧬",
+    intro: "The most widely used biological washing process in the garment industry. Enzymes act on the fabric surface to create controlled fading, bio-stoning and polishing effects.",
+    points: [
+      { title: "Definition", desc: "Uses cellulase enzymes to break down surface cellulose fibrils on cotton/denim. Produces bio-stoning, colour fading and surface smoothing effects." },
+      { title: "Types of Enzyme", desc: "Acid cellulase (strongest effect, high backstaining risk), Neutral cellulase (balanced, lower risk), Bio-polish cellulase (surface smoothing only)." },
+      { title: "Pros", desc: "Eco-friendly vs stone washing. Controlled, repeatable effect. Soft hand feel. No pumice stone disposal problem. Works on all cotton constructions." },
+      { title: "Cons", desc: "Backstaining risk on denim. Fabric strength loss if overdosed. Strict pH and temperature control required. Higher cost than normal wash." },
+      { title: "Cost", desc: "Low to medium. Enzyme cost is offset by reduced stone usage and machine wear. Overall one of the most cost-effective specialty washes." },
+      { title: "Best For", desc: "Denim bio-stoning, cotton bio-polishing, surface hair removal, combined stone + enzyme processes for enhanced fading." },
+    ],
+  },
+  "Stone Wash": {
+    icon: "🪨",
+    intro: "The original denim washing technique. Pumice stones physically abrade the garment surface to create a worn, vintage appearance with high contrast fading.",
+    points: [
+      { title: "Definition", desc: "Garments tumbled with pumice stones in washing machines. Physical abrasion from stones removes surface dye and creates a worn, aged look." },
+      { title: "Stone Types", desc: "Pumice stones (most common), synthetic abrasive stones, and rubber balls. Stone size and hardness affect the intensity of abrasion." },
+      { title: "Pros", desc: "Authentic vintage look. Heavy, dramatic fading. High contrast between raised and recessed fabric areas. Timeless fashion appeal." },
+      { title: "Cons", desc: "Stone dust damages machines over time. Stones must be removed from garment pockets after washing. Heavy on fabric — strength loss risk. Not suitable for delicate constructions." },
+      { title: "Cost", desc: "Low to medium. Pumice stones are cheap but machine maintenance costs increase over time due to abrasion damage." },
+      { title: "Best For", desc: "Heavy denim jeans and jackets requiring authentic vintage distressed look. Not suitable for lightweight or delicate fabrics." },
+    ],
+  },
+  "Bleach Wash": {
+    icon: "🌊",
+    intro: "Uses sodium hypochlorite to chemically decolorize indigo dye on denim. Creates dramatic, high-contrast fading effects that are difficult to achieve with enzymes alone.",
+    points: [
+      { title: "Definition", desc: "Sodium hypochlorite (NaOCl) added to wash bath oxidizes and destroys indigo dye molecules on fabric surface, creating dramatic colour removal." },
+      { title: "Process", desc: "Garments loaded with bleach solution at controlled concentration. After required effect achieved, bleach must be thoroughly neutralized with sodium thiosulphate or hydrogen peroxide." },
+      { title: "Pros", desc: "Dramatic colour change. Very low cost. Fast process. High contrast fading achievable. Can be combined with other processes." },
+      { title: "Cons", desc: "Fabric damage risk if not controlled. Requires careful neutralization. Environmental impact from chlorine discharge. Degrades most dyes and OBA." },
+      { title: "Cost", desc: "Very low. Sodium hypochlorite is one of the cheapest chemicals in wet processing. Cost is mostly in careful process control and neutralization." },
+      { title: "Best For", desc: "Dark denim requiring strong fading. High-contrast vintage effects. Combined with enzyme wash for enhanced results." },
+    ],
+  },
+  "Peroxide Wash": {
+    icon: "⚗️",
+    intro: "Hydrogen peroxide used as an eco-friendly bleaching alternative. Produces even, stable whitening and colour lifting without the harshness of chlorine bleach.",
+    points: [
+      { title: "Definition", desc: "H₂O₂ in alkaline conditions oxidizes coloring matter in fabric. Produces uniform whitening and colour lifting — commonly used after enzyme wash for combined effects." },
+      { title: "Process Conditions", desc: "Temperature 60–98°C, pH 10–11.5, stabilizer required to control decomposition rate. Thorough rinsing essential after treatment." },
+      { title: "Pros", desc: "Eco-friendly — breaks down to water and oxygen. Stable white result. Good absorbency improvement. No chlorine discharge. Works on all cotton types." },
+      { title: "Cons", desc: "Higher temperature requirement means higher energy cost. Slower than chlorine bleach. Needs stabilizer to prevent uncontrolled decomposition." },
+      { title: "Cost", desc: "Low to medium. H₂O₂ is affordable but energy cost for high temperature processing adds to total cost." },
+      { title: "Best For", desc: "Cotton knit bleaching, denim lightening, combined with enzyme wash for bio-stone + bleach effects. Standard bleaching for white garments." },
+    ],
+  },
+  "Acid Wash": {
+    icon: "🔬",
+    intro: "A specialty wash technique using chemical-soaked pumice stones on dry garments. Creates distinctive irregular cloud-like fading patterns unique to this process.",
+    points: [
+      { title: "Definition", desc: "Pumice stones soaked in potassium permanganate (KMnO₄) or sodium hypochlorite applied to dry garments in tumble machines. Creates irregular, high-contrast cloud patterns." },
+      { title: "Process", desc: "Garments loaded dry (no water). Pre-soaked stones tumble with garments. Chemical transfers unevenly from stone contact points creating the cloud effect. Neutralization required after." },
+      { title: "Pros", desc: "Unique cloud-like pattern impossible to replicate with other processes. High fashion value. Distinctive vintage look. Strong visual impact." },
+      { title: "Cons", desc: "KMnO₄ is hazardous — requires careful handling and PPE. Difficult to control for consistency. Environmental concerns with permanganate discharge." },
+      { title: "Cost", desc: "Medium to high. Chemical cost moderate but process control and PPE requirements add to total cost. Consistency challenges increase rejection risk." },
+      { title: "Best For", desc: "Denim with high-fashion cloud effect. Specialty and limited edition collections. Not suitable for mass production requiring consistency." },
+    ],
+  },
+  "Sand Wash": {
+    icon: "🏖️",
+    intro: "Uses fine sand or sand-blasting techniques to create a very soft, peach-skin surface texture with subtle, uniform fading across the garment.",
+    points: [
+      { title: "Definition", desc: "Fine sand particles or sand-blasting equipment used to abrade fabric surface. Creates smooth, peach-skin texture with gentle, uniform fading." },
+      { title: "Wet Sand Wash", desc: "Fine sand added to wash machine with garments and water. Mechanical tumbling creates uniform surface abrasion. Suitable for delicate fabrics." },
+      { title: "Pros", desc: "Ultra-soft hand feel. Subtle uniform fading. Works on delicate fabrics including silk and synthetic blends. Luxurious surface texture." },
+      { title: "Cons", desc: "Sand removal from garments requires thorough rinsing. Machine wear from sand abrasion. Less dramatic effect than stone wash. Higher processing time." },
+      { title: "Cost", desc: "Medium to high. Sand is inexpensive but processing time, machine maintenance and thorough rinsing requirements increase overall cost." },
+      { title: "Best For", desc: "Silk, synthetic blends, lightweight cotton. Premium garments requiring soft hand feel with subtle surface effect." },
+    ],
+  },
+  "Normal Wash": {
+    icon: "💧",
+    intro: "The most basic garment washing process. Cleans garments, removes manufacturing residues, and provides a fresh, comfortable base for all other finishing treatments.",
+    points: [
+      { title: "Definition", desc: "Standard washing with detergent and water at moderate temperature. Removes dust, sizing agents, manufacturing oils and odours. No special chemical effect." },
+      { title: "Process", desc: "Detergent added at 40–60°C, garments run for 15–30 minutes, rinsed thoroughly. Softener added in final rinse for improved hand feel." },
+      { title: "Pros", desc: "Very simple process. Extremely low cost. No risk of fabric damage. Suitable for all fabric types. Fast turnaround." },
+      { title: "Cons", desc: "No special aesthetic effect. Only basic cleaning achieved. Cannot replace specialty wash effects. Limited value addition." },
+      { title: "Cost", desc: "Very low. Detergent and water only. Most economical wash process available." },
+      { title: "Best For", desc: "Basic cleaning of all garment types. Pre-treatment before other processes. Final cleaning after specialty wash processes." },
+    ],
+  },
+  "Silicone Wash": {
+    icon: "✨",
+    intro: "A premium finishing process using silicone-based softeners to create an exceptionally smooth, silky hand feel. Popular for high-end garment finishing.",
+    points: [
+      { title: "Definition", desc: "Silicone softener applied during washing process. Creates smooth, silky surface coating on fabric fibres. Long-lasting soft effect compared to conventional softeners." },
+      { title: "Silicone Types", desc: "Amino silicone (best softness), micro silicone (uniform coating), macro silicone (durable effect). Choice depends on required softness level and durability." },
+      { title: "Pros", desc: "Superior softness vs conventional softeners. Long-lasting effect through multiple washes. Improves drape and handle. Premium product positioning." },
+      { title: "Cons", desc: "Higher cost than standard softeners. Can affect re-dyeing if applied before colour correction. Some silicones cause yellowing over time if not properly selected." },
+      { title: "Cost", desc: "Medium to high. Silicone softeners cost more than conventional but the quality improvement justifies the premium for high-end products." },
+      { title: "Best For", desc: "Premium cotton, denim finishing, knitwear. Any garment requiring luxury hand feel positioning." },
+    ],
+  },
+  "Vintage Wash": {
+    icon: "🎞️",
+    intro: "A multi-step combination process creating an authentic aged, worn-in appearance. Requires careful sequencing of enzyme, bleach and mechanical treatments.",
+    points: [
+      { title: "Definition", desc: "Combination of enzyme wash, bleach wash and mechanical treatments applied in sequence to create authentic aged, worn-in vintage appearance." },
+      { title: "Typical Process Sequence", desc: "Desizing → Enzyme wash (bio-stoning) → Bleach wash (fading) → Neutralization → Softening → Drying. Each step builds the vintage character." },
+      { title: "Pros", desc: "Authentic vintage look with depth and character. High fashion value. Multi-dimensional effect not achievable with single process." },
+      { title: "Cons", desc: "Multi-step process — long production time. Higher cost due to multiple chemical treatments. More quality control checkpoints required." },
+      { title: "Cost", desc: "High. Multiple process steps, chemicals and time make this one of the most expensive standard wash types." },
+      { title: "Best For", desc: "Premium denim collections. Fashion brands requiring authentic vintage character. Heritage and lifestyle brands." },
+    ],
+  },
+  "Moon Wash": {
+    icon: "🌙",
+    intro: "A specialty combination process creating high-contrast areas with soft fading between them — producing distinctive moon-like surface patterns on denim.",
+    points: [
+      { title: "Definition", desc: "Combination of selective bleaching and enzyme treatment creating high-contrast bright and dark areas that resemble the surface of the moon." },
+      { title: "Process", desc: "Selective application of bleaching agent to raised fabric areas while recessed areas remain darker. Enzyme treatment softens the transition between light and dark zones." },
+      { title: "Pros", desc: "Highly distinctive surface pattern. Premium fashion appearance. Unique visual effect that stands out on retail floor." },
+      { title: "Cons", desc: "Difficult to control consistency batch to batch. Requires skilled operators. Long process time. High rejection risk if not controlled carefully." },
+      { title: "Cost", desc: "High. Complexity of process, skill requirement and higher rejection risk make moon wash one of the most expensive specialty processes." },
+      { title: "Best For", desc: "Premium denim. Limited edition collections. Fashion brands targeting distinctive visual effects." },
+    ],
+  },
+};
 export default function WashProcesses() {
-  const router = useRouter();
+  const [active, setActive] = useState("Overview");
+  const current = content[active as keyof typeof content];
 
   return (
     <div>
       {/* Hero */}
-      <section style={{ position: "relative", minHeight: "50vh", display: "flex", alignItems: "center", overflow: "hidden" }}>
-        <WashCanvas />
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "5rem 2rem" }}>
+      <section style={{ background: "linear-gradient(135deg, #0d1520 0%, #1a2a4a 50%, #0d1520 100%)", padding: "4rem 2rem", borderBottom: "1px solid rgba(196,98,45,0.2)" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <p style={{ color: "#C4622D", fontSize: "0.8rem", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "1rem", fontWeight: 500 }}>
             Technical Reference
           </p>
-          <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", color: "#F0EDE8", lineHeight: 1.1, marginBottom: "1.5rem", maxWidth: 700, textShadow: "0 2px 20px rgba(0,0,0,0.5)" }}>
-            Garment Wash Processes
+          <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)", color: "#F0EDE8", lineHeight: 1.1, marginBottom: "1rem", maxWidth: 650 }}>
+            Garment Wash Processes — Complete Guide
           </h1>
-          <p style={{ color: "rgba(220,215,205,0.65)", fontSize: "1rem", lineHeight: 1.8, maxWidth: 580 }}>
-            A complete guide to all major garment washing techniques — from basic enzyme wash to specialty vintage and moon wash. Click any card for full details.
+          <p style={{ color: "rgba(220,215,205,0.6)", fontSize: "1rem", lineHeight: 1.7, maxWidth: 580 }}>
+            A comprehensive technical reference covering all major garment washing techniques — from basic normal wash to specialty vintage and moon wash.
           </p>
           <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", marginTop: "2rem" }}>
             {[
-              { num: "10", label: "Wash Types" },
+              { num: "Multiple", label: "Wash Types" },
               { num: "5+", label: "Years Experience" },
               { num: "10+", label: "Global Brands" },
             ].map((s) => (
@@ -249,78 +181,143 @@ export default function WashProcesses() {
         </div>
       </section>
 
-      {/* Wash Cards Grid */}
-      <section style={{ background: "#1A1A1A", padding: "4rem 2rem" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <p style={{ fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#666", marginBottom: "2.5rem" }}>
-            All Wash Types
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.25rem" }}>
-            {washTypes.map((w) => (
-              <div
-                key={w.id}
-                onClick={() => w.link && router.push(w.link)}
-                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.75rem", cursor: w.link ? "pointer" : "default", position: "relative", transition: "border-color 0.2s", borderTop: `2px solid ${w.tagColor}` }}
-                onMouseEnter={e => { if (w.link) (e.currentTarget as HTMLDivElement).style.borderColor = "#C4622D"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderTopColor = w.tagColor; (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLDivElement).style.borderTopColor = w.tagColor; }}
-              >
-                {/* Tag */}
-                <span style={{ position: "absolute", top: "1rem", right: "1rem", fontSize: "0.65rem", letterSpacing: "0.08em", textTransform: "uppercase", color: w.tagColor, border: `1px solid ${w.tagColor}44`, padding: "0.2rem 0.6rem" }}>
-                  {w.tag}
-                </span>
+      {/* Main Content */}
+      <section style={{ background: "#111820", padding: "4rem 2rem" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "220px 1fr", gap: "3rem", alignItems: "start" }}>
 
-                {/* Icon + Title */}
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
-                  <span style={{ fontSize: "1.75rem" }}>{w.icon}</span>
-                  <h3 style={{ fontFamily: "Georgia,serif", fontSize: "1.15rem", color: "#F0EDE8", lineHeight: 1.2 }}>{w.title}</h3>
-                </div>
+          {/* Sidebar */}
+          <div style={{ position: "sticky", top: 80 }}>
+            <p style={{ fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#555", marginBottom: "1rem" }}>
+              Wash Types
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+              {sections.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setActive(s)}
+                  style={{
+                    padding: "0.75rem 1rem",
+                    background: active === s ? "rgba(196,98,45,0.12)" : "transparent",
+                    border: "none",
+                    borderLeft: active === s ? "3px solid #C4622D" : "3px solid transparent",
+                    color: active === s ? "#C4622D" : "#666",
+                    fontSize: "0.825rem",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    fontFamily: "sans-serif",
+                    letterSpacing: "0.02em",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {content[s as keyof typeof content].icon} {s}
+                </button>
+              ))}
+            </div>
+          </div>
 
-                <p style={{ fontSize: "0.85rem", color: "#A0A0A0", lineHeight: 1.7, marginBottom: "1.25rem" }}>{w.desc}</p>
-
-                {/* Quick params */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginBottom: "1.25rem" }}>
-                  {[
-                    { label: "Temp", value: w.temp },
-                    { label: "Time", value: w.time },
-                    { label: "pH", value: w.pH },
-                    { label: "Cost", value: "★".repeat(w.cost) + "☆".repeat(4 - w.cost) },
-                  ].map((p) => (
-                    <div key={p.label} style={{ background: "rgba(255,255,255,0.03)", padding: "0.5rem 0.75rem" }}>
-                      <p style={{ fontSize: "0.6rem", letterSpacing: "0.08em", textTransform: "uppercase", color: "#555", marginBottom: "0.2rem" }}>{p.label}</p>
-                      <p style={{ fontSize: "0.8rem", color: "#E8E3DC" }}>{p.value}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Highlights */}
-                <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
-                  {w.highlights.map((h) => (
-                    <span key={h} style={{ fontSize: "0.7rem", color: "#666", border: "1px solid rgba(255,255,255,0.06)", padding: "0.2rem 0.6rem" }}>{h}</span>
-                  ))}
-                </div>
-
-                {w.link && (
-                  <p style={{ marginTop: "1rem", fontSize: "0.8rem", color: "#C4622D", letterSpacing: "0.04em" }}>
-                    View full details →
-                  </p>
-                )}
+          {/* Content Area */}
+          <div>
+            {/* Section Header */}
+            <div style={{ marginBottom: "2rem", paddingBottom: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
+                <span style={{ fontSize: "1.75rem" }}>{current.icon}</span>
+                <h2 style={{ fontFamily: "Georgia,serif", fontSize: "clamp(1.4rem, 3vw, 2rem)", color: "#F0EDE8", lineHeight: 1.2 }}>
+                  {active}
+                </h2>
               </div>
-            ))}
+              <p style={{ color: "rgba(220,215,205,0.65)", fontSize: "0.95rem", lineHeight: 1.75, borderLeft: "3px solid #C4622D", paddingLeft: "1rem" }}>
+                {current.intro}
+              </p>
+            </div>
+
+            {/* Points */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              {current.points.map((point, i) => (
+                <div
+                  key={point.title}
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                    padding: "1.25rem 1.5rem",
+                    display: "grid",
+                    gridTemplateColumns: "28px 1fr",
+                    gap: "1rem",
+                    alignItems: "start",
+                  }}
+                >
+                  <span style={{ fontFamily: "Georgia,serif", fontSize: "1rem", color: "rgba(196,98,45,0.5)", paddingTop: "0.15rem" }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <p style={{ fontSize: "0.9rem", color: "#E8E3DC", fontWeight: 500, marginBottom: "0.4rem" }}>
+                      {point.title}
+                    </p>
+                    <p style={{ fontSize: "0.85rem", color: "#A0A0A0", lineHeight: 1.7 }}>
+                      {point.desc}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Enzyme link */}
+            {active === "Enzyme Wash" && (
+              <div style={{ marginTop: "2rem", background: "rgba(196,98,45,0.06)", border: "1px solid rgba(196,98,45,0.2)", padding: "1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
+                <div>
+                  <p style={{ fontSize: "0.8rem", color: "#C4622D", marginBottom: "0.25rem", letterSpacing: "0.04em" }}>Want more detail?</p>
+                  <p style={{ fontSize: "0.9rem", color: "#E8E3DC" }}>View the full Enzyme Wash reference — all enzyme types, pros, cons and cost breakdown.</p>
+                </div>
+                <a href="/enzyme" style={{ display: "inline-block", background: "#C4622D", color: "white", padding: "0.65rem 1.5rem", fontSize: "0.85rem", textDecoration: "none", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+                  Full Enzyme Guide
+                </a>
+              </div>
+            )}
+
+            {/* Before & After placeholder */}
+            <div style={{ marginTop: "2rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", padding: "1.5rem" }}>
+              <p style={{ fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#666", marginBottom: "1rem" }}>
+                Before & After Examples
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                {["Before", "After"].map((label) => (
+                  <div key={label} style={{ background: "rgba(255,255,255,0.04)", border: "1px dashed rgba(255,255,255,0.1)", aspectRatio: "4/3", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+                    <span style={{ fontSize: "1.5rem" }}>🖼️</span>
+                    <p style={{ fontSize: "0.75rem", color: "#555", letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</p>
+                    <p style={{ fontSize: "0.7rem", color: "#444" }}>Photo coming soon</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Prev / Next */}
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2.5rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+              <button
+                onClick={() => { const idx = sections.indexOf(active); if (idx > 0) setActive(sections[idx - 1]); }}
+                disabled={sections.indexOf(active) === 0}
+                style={{ padding: "0.65rem 1.5rem", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: sections.indexOf(active) === 0 ? "#444" : "#A0A0A0", fontSize: "0.8rem", cursor: sections.indexOf(active) === 0 ? "not-allowed" : "pointer", fontFamily: "sans-serif" }}
+              >
+                ← Previous
+              </button>
+              <button
+                onClick={() => { const idx = sections.indexOf(active); if (idx < sections.length - 1) setActive(sections[idx + 1]); }}
+                disabled={sections.indexOf(active) === sections.length - 1}
+                style={{ padding: "0.65rem 1.5rem", background: sections.indexOf(active) === sections.length - 1 ? "rgba(255,255,255,0.04)" : "#C4622D", border: "none", color: "white", fontSize: "0.8rem", cursor: sections.indexOf(active) === sections.length - 1 ? "not-allowed" : "pointer", fontFamily: "sans-serif" }}
+              >
+                Next →
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section style={{ background: "#111820", padding: "4rem 2rem", textAlign: "center" }}>
+      <section style={{ background: "#2B2B2B", padding: "3rem 2rem", textAlign: "center" }}>
         <div style={{ maxWidth: 600, margin: "0 auto" }}>
-          <h2 style={{ fontFamily: "Georgia,serif", fontSize: "clamp(1.5rem, 3vw, 2rem)", color: "#F0EDE8", marginBottom: "1rem" }}>
-            Need process guidance?
-          </h2>
-          <p style={{ color: "#A0A0A0", fontSize: "0.95rem", lineHeight: 1.8, marginBottom: "2rem" }}>
-            With 5 years of hands-on wash technology experience at Pacific Jeans, I can help you choose the right process for your fabric and target effect.
+          <p style={{ color: "#A0A0A0", fontSize: "0.95rem", lineHeight: 1.8, marginBottom: "1.5rem" }}>
+            Need process guidance on any wash technique for your specific fabric or target effect?
           </p>
           <a href="mailto:joyanta.sarkar.texengg@gmail.com?subject=Wash%20Process%20Consultation" style={{ display: "inline-block", background: "#C4622D", color: "white", padding: "0.875rem 2.5rem", fontSize: "0.9rem", letterSpacing: "0.04em", textDecoration: "none" }}>
-            Get in Touch →
+            Ask Joyanta
           </a>
         </div>
       </section>
